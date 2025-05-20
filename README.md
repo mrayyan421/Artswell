@@ -65,4 +65,5 @@ Startups building niche marketplaces
 Let’s empower artisans with technology! 🚀
 
 🔗 [(https://github.com/mrayyan421)] | 📧 Contact for Collaborations: 21-SE-07@students.uettaxila.edu.pk | 21-SE-79@students.uettaxila.edu.pk | 
-21-SE-85@students.uettaxila@edu.pk
+21-SE-85@students.uettaxila.edu.pk
+
