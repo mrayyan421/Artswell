@@ -1,4 +1,6 @@
 Artswell.odysseyhorizons
+
+
 🎨 Empowering Artisans to Showcase & Sell Their Craft
 This Flutter-based ECommerce platform is designed specifically for artisans and small business owners to showcase and sell their handmade products. The app provides a user-friendly interface for both buyers and sellers, with features like product listings, order management, secure payments, and review systems.
 
