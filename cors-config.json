@@ -1,0 +1,12 @@
+[
+  {
+    "origin": [
+      "https://funoon-95f59.web.app", // Firebase Hosting domain
+      "http://localhost",             // Local development
+      "http://localhost:8080"         // Replace 8080 with your app's port
+    ],
+    "method": ["GET"],                // Only allow GET requests for images
+    "responseHeader": ["*"],          // Allow all headers
+    "maxAgeSeconds": 3600
+  }
+]

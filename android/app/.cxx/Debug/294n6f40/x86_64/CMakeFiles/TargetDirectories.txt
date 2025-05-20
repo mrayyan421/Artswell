@@ -1,0 +1,2 @@
+D:/fypBackup/ecomfinal/android/app/.cxx/Debug/294n6f40/x86_64/CMakeFiles/edit_cache.dir
+D:/fypBackup/ecomfinal/android/app/.cxx/Debug/294n6f40/x86_64/CMakeFiles/rebuild_cache.dir

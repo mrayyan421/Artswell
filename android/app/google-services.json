@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "908319216413",
+    "project_id": "funoon-95f59",
+    "storage_bucket": "funoon-95f59.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:908319216413:android:20bddaa6433a8ca57907f4",
+        "android_client_info": {
+          "package_name": "com.example.ecomfinal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "908319216413-3cr8ntrud8ab9s77mp4v9ttn0oee1rhs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ecomfinal",
+            "certificate_hash": "8e9ba375ddf225f2d4385cd7c27b4e04e7ce2cf3"
+          }
+        },
+        {
+          "client_id": "908319216413-s9ifvgfchete0p73r2j11tv639lgsfk2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxsDAPt1jUjaFAZge6iS_KY7AzaoHY70E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "908319216413-s9ifvgfchete0p73r2j11tv639lgsfk2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "908319216413-7el5p3gu7maogs12qlkc8gkfqe0bgisc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ecomfinal"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
