@@ -1,7 +1,6 @@
 import 'package:artswellfyp/common/widgets/loaders/basicLoaders.dart';
 import 'package:artswellfyp/common/widgets/successScreen.dart';
 import 'package:artswellfyp/features/personalization/controllers/addressController.dart';
-import 'package:artswellfyp/features/personalization/screens/orderManagement/orderManagement.dart';
 import 'package:artswellfyp/features/personalization/screens/profile/editCredentials.dart';
 import 'package:artswellfyp/features/shop/controllers/productController.dart';
 import 'package:artswellfyp/features/shop/screens/checkOut/checkOutMain/checkOut.dart';
@@ -13,8 +12,9 @@ import '../../../utils/constants/colorConstants.dart';
 import '../../personalization/screens/address/addressCard.dart';
 import '../../personalization/screens/address/addressMain/addNewAddress.dart';
 import '../../personalization/screens/address/addressMain/address.dart';
+import '../../personalization/screens/orderManagement.dart';
 import '../models/productModel.dart';
-
+//TODO: to mainly handle home paage navigations
 class HomeController extends GetxController {
   static HomeController get instance => Get.find();
   final addController = PageController();
@@ -92,7 +92,8 @@ class HomeController extends GetxController {
                 kAddressContainer(
                   address: defaultAddress,
                   selectedAddress: true,
-                  onTap: () {}, // Disable tap in confirmation view
+                  onTap: () {},
+                  onLongTap: (){},
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
@@ -114,12 +115,10 @@ class HomeController extends GetxController {
         duration: const Duration(milliseconds: 700),
       );
     } else {
-      // No default address selected, prompt user to select one
       kLoaders.warningSnackBar(
         title: 'No Default Address',
         message: 'Please select a default address first',
       );
-      // Optionally navigate to address selection screen
       Get.to(
             () => const UserAddressScreen(),
         transition: Transition.downToUp,

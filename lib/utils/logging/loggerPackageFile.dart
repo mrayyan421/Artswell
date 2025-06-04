@@ -1,6 +1,7 @@
+//TODO:logger class to increase dev's code readability
 import 'package:logger/logger.dart';
 
-class kLoggerLogic{//logger class to increase dev's code readability
+class kLoggerLogic{
   static final Logger _logger=Logger(//logger variable styling
     filter: null,
     printer: PrettyPrinter(methodCount: 2,

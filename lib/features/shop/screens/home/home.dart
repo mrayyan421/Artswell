@@ -1,3 +1,4 @@
+//TODO: CREATE Home screen
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:artswellfyp/common/widgets/customizedShapes/appBar.dart';
@@ -10,6 +11,7 @@ import '../../../../common/widgets/bottomSheetContainer.dart';
 import '../../../../common/widgets/commonWidgets/filter.dart';
 import '../../../../common/widgets/commonWidgets/titleText.dart';
 import '../../../../common/widgets/customizedShapes/searchBarContainer.dart';
+import '../../../../common/widgets/customizedShapes/searchResultsBottomSheet.dart';
 import '../../../../common/widgets/verticalTextWidget.dart';
 import '../../../../common/widgets/commonWidgets/productListingStructure.dart';
 import '../../../personalization/controllers/userController.dart';
@@ -72,13 +74,19 @@ class _HomeScreenState extends State<HomeScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   SearchContainer(
-                    text: 'What are you looking for???',
+                    onSearchValue: (searchQuery) {
+                      // Trigger search and update products
+                      productController.loadProducts();
+                      // productController.searchProducts(searchQuery);
+                    },
+                    text: 'What are you looking for?',
                     iconImg: 'assets/icons/search.png',
                     width: kDeviceComponents.screenWidth(context),
+                    // onClear: () => productController.clearSearch(), // Add this
                   ),
                   const SizedBox(height: kSizes.mediumPadding),
                   Padding(
-                    padding: const EdgeInsets.only(left: kSizes.smallPadding),
+                    padding: const EdgeInsets.only(top:kSizes.largePadding,left: kSizes.smallPadding),
                     child: Column(
                       children: [
                         const SectionHeading(
@@ -106,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
                           }
                           return SizedBox(
-                            height: 80.0,
+                            height: kDeviceComponents.screenHeight(context)/10,
                             child: ListView.builder(
                               itemCount: categoryController.allCategories.length,
                               scrollDirection: Axis.horizontal,
@@ -120,8 +128,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                             ),
                           );
-                        }),SizedBox(height: kDeviceComponents.screenWidth(context)/12,),Obx(() => Text(
-                            '${userController.user.value.role == 'Seller' ? 'Sell' : 'Buy'} the best handicrafts',style: Theme.of(context).textTheme.displaySmall?.copyWith(fontStyle: FontStyle.italic),
+                        }),SizedBox(height: kDeviceComponents.screenHeight(context)*0.021,),Obx(() => Text(
+                          '${userController.user.value.role == 'Seller' ? 'Sell' : 'Buy'} the best handicrafts',style: Theme.of(context).textTheme.displayMedium?.copyWith(fontStyle: FontStyle.italic),
                         ))
                       ],
                     ),
@@ -142,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
           enableDrag: true,
           builder: (BuildContext context) {
             return BottomSheetContainer(
-              height: kDeviceComponents.containerHeight(context) * 0.43,
+              height: kDeviceComponents.screenHeight(context)*0.35,
               child: CustomScrollView(
                 slivers: [
                   // Filter section with constrained width
@@ -174,7 +182,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     SliverFillRemaining(
                       child: Center(
                         child: Text(
-                          'No products available',
+                          // Different messages for search vs regular
+                          productController.searchQuery.value.isEmpty
+                              ? 'No products available'
+                              : 'No products found for "${productController.searchQuery.value}"',
                           style: Theme.of(context).textTheme.displayMedium,
                         ),
                       ),
@@ -186,39 +197,45 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: kSizes.smallPadding,
                       ),
                       sliver: SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: kSizes.gridViewSpace,
-                          crossAxisSpacing: kSizes.gridViewSpace,
-                          childAspectRatio: 0.65,
-                          mainAxisExtent: 280,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                            final product = productController.products[index];
-                            return GestureDetector(
-                              onTap: () => Get.to(
-                                    () => ProductDetail(product: product),
-                                transition: Transition.downToUp,
-                                duration: const Duration(milliseconds: 700),
-                              ),
-                              child: ProductCardVertical(
-                                productImagePath: product.productImages.isNotEmpty
-                                    ? product.productImages[0]
-                                    : 'assets/images/categories/stoneArt.png',
-                                isFavorite: userController.isProductFavorite(product.id),
-                                onFavoriteToggle: () => userController.toggleFavoriteProduct(product.id),
-                                productId: product.id,
-                                labelText: product.productName,
-                                priceText: product.productPrice,
-                                isBidding: product.isBiddable,
-                                rating: productController.averageRating.value,
-                                product: product,
-                              ),
-                            );
-                          },
-                          childCount: productController.products.length,
-                        ),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: kSizes.gridViewSpace,
+                            crossAxisSpacing: kSizes.gridViewSpace,
+                            childAspectRatio: 0.65,
+                            mainAxisExtent: 280,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                              if (index >= productController.products.length) {
+                                return const SizedBox(); // or a fallback widget
+                              }
+
+                              final product = productController.products[index];
+
+                              return GestureDetector(
+                                onTap: () => Get.to(
+                                      () => ProductDetail(product: product),
+                                  transition: Transition.downToUp,
+                                  duration: const Duration(milliseconds: 700),
+                                ),
+                                child: ProductCardVertical(
+                                  productImagePath: product.productImages.isNotEmpty
+                                      ? product.productImages[0]
+                                      : 'assets/images/categories/stoneArt.png',
+                                  isFavorite: userController.isProductFavorite(product.id),
+                                  onFavoriteToggle: () => userController.toggleFavoriteProduct(product.id),
+                                  productId: product.id,
+                                  labelText: product.productName,
+                                  priceText: product.productPrice,
+                                  isBidding: product.isBiddable,
+                                  rating: productController.averageRating.value,
+                                  product: product,
+                                ),
+                              );
+                            },
+                            childCount: productController.products.length,
+                          )
+
                       ),
                     ),
                 ],

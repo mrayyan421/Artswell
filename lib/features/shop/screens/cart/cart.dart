@@ -71,7 +71,8 @@ class CartScreen extends StatelessWidget {
                       final item = cartItems[index];
                       final itemTotal = item.items.first.price * item.items.first.quantity;
 
-                      return Column(
+                      if(item.receiptImageUrl!=null) {
+                        return Column(
                         children: [
                           kCircularContainer(
                             backgroundColor: kColorConstants.klInactiveTrackColor,
@@ -86,6 +87,9 @@ class CartScreen extends StatelessWidget {
                               quantity: item.items.first.quantity,
                               productId: item.items.first.productId,
                               estimatedDelivery: item.estimatedDelivery.toString(),
+                              address: item.address,
+                              customerName: UserController.instance.user.value.fullName,
+                              status: item.status,
                             ),
                           ),
                           const SizedBox(height: kSizes.smallestPadding),
@@ -109,6 +113,7 @@ class CartScreen extends StatelessWidget {
                           ),
                         ],
                       );
+                      }
                     },
                   ),
                   const SizedBox(height: kSizes.smallPadding),
@@ -156,18 +161,23 @@ class CartScreen extends StatelessWidget {
                             return FutureBuilder<String>(
                               future: _orderController.getSellerPhoneNumber(orderWithReceipt.sellerId),
                               builder: (context, phoneSnapshot) {
-                                return ElevatedButton(
-                                  onPressed: () {
-                                    if (phoneSnapshot.hasData) {
-                                      _callSeller(phoneSnapshot.data!);
-                                    }
-                                  },
-                                  child: Text(
-                                    phoneSnapshot.hasData
-                                        ? 'Contact Seller: ${phoneSnapshot.data}'
-                                        : 'Loading...',
-                                    textAlign: TextAlign.center,
-                                  ),
+                                return Column(
+                                  children: [
+                                    if (phoneSnapshot.hasData)Text('Contact Seller and provide Order information',textAlign: TextAlign.center,style: Theme.of(context).textTheme.displayMedium?.copyWith(fontStyle: FontStyle.italic,color: Colors.black),),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        if (phoneSnapshot.hasData) {
+                                          _callSeller(phoneSnapshot.data!);
+                                        }
+                                      },
+                                      child: Text(
+                                        phoneSnapshot.hasData
+                                            ? 'Contact Seller: ${phoneSnapshot.data}'
+                                            : 'Loading...',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
                                 );
                               },
                             );
@@ -248,13 +258,8 @@ class CartScreen extends StatelessWidget {
             onPressed: () => _updateItemQuantity(index, item, 1),
           ),
         ] else ...[
-          // Show empty space to maintain layout
           const SizedBox(width: 38),
           const SizedBox(width: kSizes.smallPadding),
-          /*Text(
-            '${item.items.first.quantity}',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),*/
           const SizedBox(width: kSizes.smallPadding),
           const SizedBox(width: 38),
         ],
@@ -262,7 +267,7 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  // Add this helper method to your CartScreen
+  // helper method to display seller's phone num
   void _callSeller(String phoneNumber) async {
     final url = 'tel:$phoneNumber';
     if (await canLaunchUrl(Uri.parse(url))) {
@@ -280,164 +285,25 @@ class CartScreen extends StatelessWidget {
       final newQuantity = item.items.first.quantity + change;
       if (newQuantity < 1) return;
 
-      // Create updated item with ALL original data including image
       final updatedItem = OrderItem(
         productId: item.items.first.productId,
         name: item.items.first.name,
         quantity: newQuantity,
         price: item.items.first.price,
-        imageUrl: item.productImage, // Make sure OrderItem has this field
+        imageUrl: item.productImage,
+        address: item.address
       );
 
       await _orderController.updateCartItem(
+        newStatus: 'Payment Pending',
         orderId: item.orderId,
         updatedItem: updatedItem,
         productImage: item.productImage,
       );
 
-      // Optional: Clear specific cache if needed
       await CachedNetworkImage.evictFromCache(item.productImage);
     } catch (e) {
       kLoaders.errorSnackBar(title: 'Error', message: 'Failed to update quantity');
     }
   }
 }
-/*class CartScreen extends StatefulWidget {
-  const CartScreen({Key? key}) : super(key: key);
-
-  @override
-  State<CartScreen> createState() => _CartScreenState();
-}
-class _CartScreenState extends State<CartScreen> {
-  List<int> _itemCounts = [];
-  List<int> _itemPrices = [];
-  List<int> _basePrices = []; // Base prices for each item
-  int _subtotal = 0;
-  @override
-  void initState() {
-    super.initState();
-    // Initialize item counts and prices dynamically (replace with actual data from backend)
-    _basePrices = [250, 300, 150, 400]; // Sample base prices for each item to be made dynamic during backend integration
-    _itemPrices = List.from(_basePrices); // Initialize item prices with base prices
-    _itemCounts = List.generate(_basePrices.length, (index) => 1);
-    calculateSubtotal(); // Calculate initial subtotal
-  }
-  void calculateSubtotal() {
-    _subtotal = _itemPrices.fold(0, (sum, item) => sum + item);
-  }
-
-  void incrementItemCount(int index) {
-    setState(() {
-      _itemCounts[index]++;
-      _itemPrices[index] = _basePrices[index] * _itemCounts[index];
-      calculateSubtotal();
-    });
-  }
-
-  void decrementItemCount(int index) {
-    if (_itemCounts[index] > 1) {
-      setState(() {
-        _itemCounts[index]--;
-        _itemPrices[index] = _basePrices[index] * _itemCounts[index];
-        calculateSubtotal();
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kColorConstants.klAntiqueWhiteColor,
-      appBar: AppBar(
-        leading: GestureDetector(
-          onTap: Get.back,
-          child: Image.asset('assets/icons/leftArrow.png'),
-        ),
-        title: Text(
-          'Cart',
-          // style: Theme.of(context).textTheme.titleLarge,
-        ),
-        centerTitle: true,
-        backgroundColor: kColorConstants.klPrimaryColor,
-      ),
-      body: SingleChildScrollView(
-        // scrollDirection: Axis.vertical,
-        child: Padding(
-          padding: const EdgeInsets.all(kSizes.mediumPadding),
-          child: Column(
-            children: [
-              ListView.separated(
-                scrollDirection: Axis.vertical,
-                shrinkWrap: true,
-                itemCount: _itemCounts.length,
-                separatorBuilder: (_, __) => const SizedBox(height: kSizes.smallPadding),
-                itemBuilder: (context, index) {
-                  return Column(
-                    children: [
-                      kCircularContainer(backgroundColor: kColorConstants.klInactiveTrackColor,width: null,showBorder: true,height: null,padding: EdgeInsets.all(kSizes.mediumBorderRadiusPadding), child: const kCartItem(),),
-                      SizedBox(height: kSizes.smallestPadding),
-                      Row(mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              SizedBox(width: 30),
-                              itemQuantityAddRemove(index, context),
-                            ],
-                          ),
-                          Text(
-                            'PKR ${_itemPrices[index]}',style: Theme.of(context).textTheme.labelLarge?.copyWith(fontStyle: FontStyle.italic),),
-                        ],
-                      ),
-                    ],
-                  );
-                },
-              ),
-              SizedBox(height: kSizes.smallPadding,),
-              kCircularContainer(
-                padding: EdgeInsets.all(kSizes.smallPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Total Price: PKR $_subtotal', style: Theme.of(context).textTheme.titleLarge,),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Expanded(child: ElevatedButton(
-                            onPressed: ()=> HomeController.instance.checkOutNavigation(),
-                            child: Text('Proceed to Payment', textAlign: TextAlign.center,),),
-                        ),
-                        SizedBox(width: 8.0),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // Cancel logic here
-                            },
-                            child: Text('Cancel'), style: ElevatedButton.styleFrom(backgroundColor: kColorConstants.klSearchBarColor,),),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),backgroundColor: kColorConstants.klInactiveTrackColor,width: null,showBorder: true,height: null,),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Row itemQuantityAddRemove(int index, BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        kCircularIcon(icon: 'assets/icons/remove.png',width: 38,height: 38,size: kSizes.mediumIcon,onPressed: () => decrementItemCount(index),),
-        SizedBox(width: kSizes.smallPadding),
-        Text(
-          '${_itemCounts[index]}', // to be fetched from database
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        SizedBox(width: kSizes.smallPadding),
-        kCircularIcon(icon: 'assets/icons/add.png',width: 38,height: 38,size: kSizes.mediumIcon,onPressed: () => incrementItemCount(index),),
-      ],
-    );
-  }
-}*/

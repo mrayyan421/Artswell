@@ -1,4 +1,6 @@
+import 'package:artswellfyp/features/personalization/controllers/addressController.dart';
 import 'package:artswellfyp/features/shop/controllers/productController.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:artswellfyp/utils/theme/theme.dart';
@@ -77,16 +79,39 @@ class _kBottomAddToCartState extends State<kBottomAddToCart> {
         return;
       }
 
-      // Create order item
+      // Get user's default address (where isDefault == true)
+      final addressQuery = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(authUser.uid)
+          .collection('addresses')
+          .where('isDefault', isEqualTo: true)
+          .limit(1)
+          .get();
+
+      if (addressQuery.docs.isEmpty) {
+        kLoaders.warningSnackBar(
+            title: 'Address Required',
+            message: 'Please set a default address before adding to cart'
+        );
+        return;
+      }
+
+      final defaultAddress = addressQuery.docs.first.data();
+
+      // Extract only the required fields and format as a string
+      final addressString = _formatAddress(defaultAddress);
+
+      // Create order item with address
       final orderItem = OrderItem(
           productId: product.id,
           name: product.productName,
           quantity: _itemCount,
           price: product.productPrice.toDouble(),
-          imageUrl: product.productImages.first
+          imageUrl: product.productImages.first,
+          address: addressString
       );
 
-      // Create cart document
+      // Create cart document with address
       final order = OrderModel(
           orderId: 'CART-${DateTime.now().millisecondsSinceEpoch}',
           userId: authUser.uid,
@@ -97,14 +122,14 @@ class _kBottomAddToCartState extends State<kBottomAddToCart> {
           totalAmount: product.productPrice.toDouble() * _itemCount,
           productImage: product.productImages.first,
           receiptImageUrl: '',
-          sellerId: product.sellerId
+          sellerId: product.sellerId,
+          address: addressString
       );
 
       debugPrint('Adding to cart: ${order.toJson()}');
 
       // Add to cart
       await _orderController.addToCart(order);
-      // await _orderController.addToSellerCart(order);
 
       // Reset counter
       if (mounted) {
@@ -122,6 +147,13 @@ class _kBottomAddToCartState extends State<kBottomAddToCart> {
           message: 'Failed to add to cart. Please try again.'
       );
     }
+  }
+  String _formatAddress(Map<String, dynamic> address) {
+    return '${address['name'] ?? ''}\n'
+        '${address['address'] ?? ''}\n'
+        '${address['city'] ?? ''}, ${address['postalCode'] ?? ''}\n'
+        '${address['country'] ?? ''}\n'
+        'Phone: ${address['phone'] ?? ''}';
   }
 
   @override

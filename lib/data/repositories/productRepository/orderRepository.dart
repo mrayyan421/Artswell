@@ -13,17 +13,17 @@ class OrderRepository {
     try {
       final batch = _firestore.batch();
 
-      // 1. Add to main orders collection
-      final orderRef = _firestore.collection('orders').doc(order.orderId);
-      batch.set(orderRef, order.toJson());
-
-      // 2. Add to user's orders subcollection
-      final userOrderRef = _firestore
-          .collection('Users')
-          .doc(order.userId)
-          .collection('orders')
-          .doc(order.orderId);
+      // 1. Add to user's orders subcollection
+      final userOrderRef = _firestore.collection('Users').doc(order.userId).collection('orders').doc(order.orderId);
       batch.set(userOrderRef, order.toJson());
+
+      // 2. Add to user's cart subcollection as an order
+      final cartOrderRef = _firestore.collection('Users').doc(order.userId).collection('cart').doc(order.orderId);
+      batch.set(cartOrderRef, {
+        ...order.toJson(),
+        'isOrder': true, // Mark as order document
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
       // 3. Update user's order metadata
       final userRef = _firestore.collection('Users').doc(order.userId);
@@ -47,12 +47,7 @@ class OrderRepository {
   /// Gets a real-time stream of orders for a specific user
   Stream<List<OrderModel>> getOrdersForUser(String userId) {
     try {
-      return _firestore
-          .collection('orders')
-          .where('userId', isEqualTo: userId)
-          .orderBy('orderDate', descending: true)
-          .snapshots()
-          .handleError((error) {
+      return _firestore.collection('orders').where('userId', isEqualTo: userId).orderBy('orderDate', descending: true).snapshots().handleError((error) {
         debugPrint('Error streaming orders: $error');
         throw 'Failed to load orders. Please try again.';
       })
@@ -77,11 +72,7 @@ class OrderRepository {
         final doc = await orderRef.get();
         if (doc.exists) {
           final userId = doc.data()!['userId'];
-          final userOrderRef = _firestore
-              .collection('Users')
-              .doc(userId)
-              .collection('orders')
-              .doc(orderId);
+          final userOrderRef = _firestore.collection('Users').doc(userId).collection('orders').doc(orderId);
           transaction.update(userOrderRef, {'status': newStatus});
         }
       });
@@ -111,48 +102,6 @@ class OrderRepository {
     }
   }
   /// Uploads a receipt image and returns its download URL
-  /*Future<String> uploadReceiptImage({
-    required String orderId,
-    required File imageFile,
-    required String userId,
-  }) async {
-    try {
-      // Generate unique filename with order context
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final ext = imageFile.path.split('.').last;
-      final fileName = 'receipt_${orderId}_$timestamp.${ext == 'jpg' ? 'jpeg' : ext}';
-
-      // Configure upload metadata
-      final metadata = SettableMetadata(
-        contentType: 'image/${ext == 'jpg' ? 'jpeg' : ext}',
-        customMetadata: {
-          'uploadedBy': userId,
-          'orderId': orderId,
-          'uploadedAt': timestamp.toString(),
-        },
-      );
-
-      // Create storage reference
-      final ref = _storage.ref()
-          .child('order_receipts/$userId/$fileName');
-
-      // Upload with progress monitoring
-      final uploadTask = ref.putFile(imageFile, metadata);
-      final snapshot = await uploadTask;
-
-      // Get download URL
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-      debugPrint('📸 Receipt uploaded for order $orderId: $downloadUrl');
-
-      return downloadUrl;
-    } on FirebaseException catch (e) {
-      debugPrint('🔥 Storage error uploading receipt: ${e.code} - ${e.message}');
-      throw 'Receipt upload failed. Please try again.';
-    } catch (e) {
-      debugPrint('Error uploading receipt: $e');
-      throw 'Could not upload receipt. Please check the file and try again.';
-    }
-  }*/
   Future<void> createOrderInUserSubcollection({
     required String userId,
     required OrderModel order,
@@ -160,14 +109,6 @@ class OrderRepository {
     await _firestore
         .collection('Users')
         .doc(userId)
-        .collection('orders')
-        .doc(order.orderId)
-        .set(order.toJson());
-  }
-  Future<void> createOrderInMainCollection({
-    required OrderModel order,
-  }) async {
-    await _firestore
         .collection('orders')
         .doc(order.orderId)
         .set(order.toJson());

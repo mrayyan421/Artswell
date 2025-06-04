@@ -15,7 +15,7 @@ class ForgotPasswordController extends GetxController {
   final email = TextEditingController();
   final GlobalKey<FormState> forgetPasswordFormKey = GlobalKey<FormState>();
 
-  /// Send Reset Password Email
+  /// send Password Reset Email (Optional Functionality)
   Future<void> sendForgetPasswordEmailForCurrentUser() async {
     try {
       // Show loading dialog
@@ -63,36 +63,4 @@ class ForgotPasswordController extends GetxController {
       );
     }
   }
-
-  /// Resend Password Reset Email (Optional Functionality)
-/*  Future<void> resendPasswordResetEmail(String emailAddress) async {
-    try {
-      // Show loading dialog
-      FFullScreenLoader.openLoadingDialog('Resending Email...', 'assets/images/processing.gif');
-
-      // Check Internet Connectivity
-      final isConnected = await NetworkManager.instance.isConnected();
-      if (!isConnected) {
-        FFullScreenLoader.hideLoading();
-        kLoaders.errorSnackBar(title: 'No Internet', message: 'Please check your internet connection.');
-        return;
-      }
-
-      // Resend the password reset email
-      await AuthenticationRepository.instance.resetPassword();
-
-      // Stop loading and show success snack bar
-      FFullScreenLoader.hideLoading();
-      kLoaders.successSnackBar(
-        title: 'Email Resent',
-        message: 'The password reset link has been resent to $emailAddress.',
-      );
-    } catch (e) {
-      FFullScreenLoader.hideLoading();
-      kLoaders.errorSnackBar(
-        title: 'Error',
-        message: e.toString(),
-      );
-    }
-  }*/
 }

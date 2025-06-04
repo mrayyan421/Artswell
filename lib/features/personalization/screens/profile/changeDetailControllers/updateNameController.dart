@@ -13,7 +13,6 @@ class UpdateNameController extends GetxController {
   // Singleton instance
   static UpdateNameController get instance => Get.find();
 
-  // Controllers
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
 
@@ -104,41 +103,6 @@ class UpdateNameController extends GetxController {
     }
   }
 
-
-/*  Future<void> updateUserName() async {
-    bool _isSuccessful = false;
-    try {
-      // Show loading dialog
-      FFullScreenLoader.openLoadingDialog('Updating your information...', 'assets/images/processing.gif');
-      // Check internet connection
-      final isConnected = await NetworkManager.instance.isConnected();
-      if (!isConnected) {
-        FFullScreenLoader.hideLoading();
-        kLoaders.warningSnackBar(title: 'No Internet Connection', message: 'Please check your network connection');
-        return;
-      }
-      // Validate form
-      if (!updateUserNameFormKey.currentState!.validate()) {
-        FFullScreenLoader.hideLoading();
-        return;
-      }
-
-      //update user data
-      Map<String,dynamic> name={'fullName':nameController.text.trim()};
-      //save to firestore
-      await userRepository.updateSingleField(name);
-      userController.user.value.fullName=nameController.text.trim();
-      _isSuccessful=true;
-      FFullScreenLoader.hideLoading();
-      kLoaders.successSnackBar(title: 'Success', message: 'Your name has been updated');
-
-      Get.off(()=>const EditCredentialsScreen(),transition: Transition.downToUp,duration: const Duration(milliseconds: 700));
-
-    } catch (e) {
-      print(e);
-      FFullScreenLoader.hideLoading();
-      if (!_isSuccessful) {kLoaders.errorSnackBar(title: 'Dang it!', message: 'Failed to update name: ${e.toString()}');}
-    }}*/
 
   @override
   void onClose() {

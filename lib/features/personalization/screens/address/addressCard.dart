@@ -12,16 +12,19 @@ class kAddressContainer extends StatelessWidget {
     required this.address,
     required this.selectedAddress,
     required this.onTap,
+    required this.onLongTap,
   });
 
   final AddressModel address;
   final bool selectedAddress;
   final VoidCallback onTap;
+  final VoidCallback onLongTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongTap,
       child: Padding(
         padding: const EdgeInsets.only(top: kSizes.mediumPadding),
         child: kCircularContainer(

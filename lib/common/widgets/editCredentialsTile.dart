@@ -15,8 +15,8 @@ class editCredentialsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children: [
-      Expanded(flex:3,child: Text(title,style: kAppTheme.lightTheme.textTheme.bodyLarge?.copyWith(color: Colors.white),)),
-      Expanded(flex:6,child: Text(value,style: kAppTheme.lightTheme.textTheme.bodyMedium?.copyWith(color: Colors.white)),),
+      Expanded(flex:3,child: Text(title,style: kAppTheme.lightTheme.textTheme.bodyMedium?.copyWith(color: Colors.white),)),
+      Expanded(flex:6,child: Text(value,style: kAppTheme.lightTheme.textTheme.bodyMedium?.copyWith(color: Colors.white,fontStyle: FontStyle.italic)),),
       GestureDetector(onTap:onTap,child: Expanded(flex:1,child: Image.asset(imgPath,height: 35,),),),
     ],);
   }

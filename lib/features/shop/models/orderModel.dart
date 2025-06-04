@@ -14,6 +14,7 @@ class OrderModel {
   final double totalAmount;
   final String productImage;
   final String? receiptImageUrl;
+  final String address;
 
   OrderModel({
     required this.orderId,
@@ -25,6 +26,7 @@ class OrderModel {
     required this.estimatedDelivery,
     required this.totalAmount,
     required this.productImage,
+    required this.address,
     this.receiptImageUrl,
   });
 
@@ -40,6 +42,7 @@ class OrderModel {
       'totalAmount': totalAmount,
       'productImage':productImage,
       'receiptImageUrl': receiptImageUrl,
+      'address':address
     };
   }
 
@@ -56,6 +59,7 @@ class OrderModel {
       totalAmount: data['totalAmount'],
       productImage: data['productImage']??'',
       receiptImageUrl: data['receiptImageUrl'],
+      address: data['address']
     );
   }
   Map<String, dynamic> toMinimalJson() => {
@@ -65,6 +69,7 @@ class OrderModel {
     'status': status,
     'totalAmount': totalAmount,
     'productImage': productImage,
+    'address':address
   };
 }
 
@@ -74,6 +79,7 @@ class OrderItem {
   final int quantity;
   final double price;
   final String? imageUrl;
+  final String address;
 
 
   OrderItem({
@@ -81,7 +87,8 @@ class OrderItem {
     required this.name,
     required this.quantity,
     required this.price,
-    this.imageUrl
+    this.imageUrl,
+    required this.address
   });
 
   Map<String, dynamic> toJson() {
@@ -90,6 +97,7 @@ class OrderItem {
       'name': name,
       'quantity': quantity,
       'price': price,
+      'address':address,
       if (imageUrl != null) 'imageUrl': imageUrl,
     };
   }
@@ -100,7 +108,8 @@ class OrderItem {
         name: json['name'],
         quantity: json['quantity'],
         price: json['price'],
-        imageUrl: json['imageUrl']
+        imageUrl: json['imageUrl'],
+      address: json['address']
     );
   }
   factory OrderItem.fromCartItem(CartItem item) {
@@ -110,6 +119,7 @@ class OrderItem {
       quantity: item.quantity,
       price: item.price,
       imageUrl: item.imageUrl,
+      address: item.address
     );
   }
 }
@@ -121,6 +131,7 @@ class CartItem {
   final int quantity;
   final double price;
   final String imageUrl;
+  final String address;
 
   CartItem({
     required this.productId,
@@ -128,6 +139,7 @@ class CartItem {
     required this.quantity,
     required this.price,
     required this.imageUrl,
+    required this.address
   });
   OrderItem toOrderItem() {
     return OrderItem(
@@ -136,6 +148,7 @@ class CartItem {
       quantity: quantity,
       price: price,
       imageUrl: imageUrl,
+      address: address
     );
   }
   Map<String, dynamic> toJson() {
@@ -145,6 +158,7 @@ class CartItem {
       'quantity': quantity,
       'price': price,
       'imageUrl': imageUrl,
+      'address':address
     };
   }
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -153,7 +167,8 @@ class CartItem {
         name: json['name'],
         quantity: json['quantity'],
         price: json['price'],
-        imageUrl: json['imageUrl']
+        imageUrl: json['imageUrl'],
+      address: json['address']
     );
   }
 }

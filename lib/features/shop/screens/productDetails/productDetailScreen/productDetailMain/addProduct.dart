@@ -19,9 +19,9 @@ class AddProductScreen extends StatelessWidget {
   final List<String> _categories = [
     'calligraphy',
     'clothes',
-    'stone Art',
-    'truck Art',
-    'wood'
+    'stone art',
+    'truck art',
+    'wood art'
   ];
 
   AddProductScreen({super.key});
@@ -175,76 +175,6 @@ class AddProductScreen extends StatelessWidget {
               },
               child: const Text("Save"),
             ),
-            /*ElevatedButton(
-              onPressed: ()async {
-                try {
-                  final id = await controller.add(
-                    name: _nameCtrl.text,
-                    description: _descCtrl.text,
-                    images: _images.toList(),
-                    price: int.parse(_priceCtrl.text),
-                    feedback: [],
-                    reviewCount: 0,
-                    isBiddable: _isBiddable.value,
-                    category: _selectedCategory.value,
-                    createdAt: Timestamp.now(),
-                    averageRating: 0.0
-                  );
-
-                  // After adding, don't immediately overwrite selectedProduct to empty
-                  // Instead, reload products and assign the newly created product properly
-                  await controller.loadProducts();
-                  controller.selectedProduct.value =
-                      controller.products.firstWhere((p) => p.id == id);
-
-                  await controller.pickAndUploadImage(id);
-                  Get.back();
-                } catch (e) {
-                  print(e);
-                  kLoaders.errorSnackBar(
-                      title: 'Upload Failed',
-                      message: 'Failed to upload image, Try again... ${e.toString()}');
-                }
-              },
-                /*async {
-                try {
-                  final id = await controller.add(
-                      name: _nameCtrl.text,
-                      description: _descCtrl.text,
-                      images: _images.toList(),
-                      price: int.parse(_priceCtrl.text),
-                      feedback: [],
-                      reviewCount: 0,
-                  );
-                  controller.selectedProduct.value = ProductModel(
-                      id: id,
-                      productName: _nameCtrl.text,
-                      productImages: [],
-                      primaryImageIndex: 0,
-                      inStock: true,
-                      isBiddable: _isBiddable.value,
-                      isFavorite: false,
-                      productDescription: _descCtrl.text,
-                      productPrice: int.parse(_priceCtrl.text),
-                      sellerId: UserController.instance.user.value.uid,
-                      comment: '',
-                      category: _selectedCategory.value,
-                      feedback:
-                      controller.selectedProduct.value?.feedback ?? <String>[],
-                      reviewCount:
-                      controller.selectedProduct.value?.reviewCount ?? 0);
-                  await controller.pickAndUploadImage(id);
-                  Get.back();
-                } catch (e) {
-                  print(e);
-                  kLoaders.errorSnackBar(
-                      title: 'Upload Failed',
-                      message:
-                      'Failed to upload image, Try again... ${e.toString()}');
-                }
-              },*/
-              child: Text("Save"),
-            ),*/
           ],
         ),
       ),

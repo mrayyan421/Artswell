@@ -1,0 +1,2 @@
+D:/fypBackup/ecomfinal/android/app/.cxx/RelWithDebInfo/6fkn414v/arm64-v8a/CMakeFiles/edit_cache.dir
+D:/fypBackup/ecomfinal/android/app/.cxx/RelWithDebInfo/6fkn414v/arm64-v8a/CMakeFiles/rebuild_cache.dir

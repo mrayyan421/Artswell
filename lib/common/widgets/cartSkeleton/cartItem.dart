@@ -13,7 +13,10 @@ class kCartItem extends StatelessWidget {
   final int quantity;
   final String productId;
   final String estimatedDelivery;
+  final String address;
   final bool? paymentConfirmation;
+  final String customerName;
+  final String status;
 
   const kCartItem({
     super.key,
@@ -23,7 +26,10 @@ class kCartItem extends StatelessWidget {
     required this.quantity,
     required this.productId,
     required this.estimatedDelivery,
-    this.paymentConfirmation=false
+    this.paymentConfirmation=false,
+    required this.address,
+    required this.customerName,
+    required this.status
   });
 
   @override
@@ -57,12 +63,17 @@ class kCartItem extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  paymentConfirmation == true ? 'Payment Confirmed' : 'Pending Payment',
+                  status == 'Order Dispatched'
+                      ? 'Order Dispatched'
+                      : (paymentConfirmation == true ? 'Payment Confirmed' : 'Pending Payment'),
                   style: TextStyle(
-                    color: paymentConfirmation == true ? kColorConstants.klVisitStoreElevationBtnClr : kColorConstants.klOrangeColor,
+                    color: status == 'Order Dispatched'
+                        ? kColorConstants.klSecondaryColor
+                        : (paymentConfirmation == true ? kColorConstants.klVisitStoreElevationBtnClr : kColorConstants.klOrangeColor),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 /// Attributes - Now showing price and quantity
                 Text.rich(
                   TextSpan(
@@ -76,7 +87,7 @@ class kCartItem extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       TextSpan(
-                        text: 'ID: $productId • ',
+                        text: 'Address: $address • ',
                         style: Theme.of(context).textTheme.bodySmall, //TODO: REMOVE AFTER TESTING
                       ),
                       if (UserController.instance.user.value.role == 'Customer')
@@ -86,7 +97,7 @@ class kCartItem extends StatelessWidget {
                         )
                       else
                         TextSpan(
-                            text: 'Customer: ${UserController.instance.user.value.fullName}',
+                            text: 'Customer: $customerName',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)
                         )
                     ],

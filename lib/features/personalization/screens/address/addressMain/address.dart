@@ -36,6 +36,7 @@ class UserAddressScreen extends StatelessWidget {
               selectedAddress: address.isDefault,
               // selectedAddress: addressController.selectedAddress.value?.id == address.id,
               onTap: ()async => addressController.setDefaultAddress(address.id),
+              onLongTap: ()async=>addressController.deleteAddress(address.id),
             );
           },
         );

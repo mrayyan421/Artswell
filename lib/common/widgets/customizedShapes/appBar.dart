@@ -41,26 +41,6 @@ class _CustomAppbarState extends State<CustomAppbar> {
         ),
       ),
       actions: [
-        /*Container(
-          width: 90.0,
-          child: DropdownButton<String>(
-            hint: Text('Lang', style: kTextTheme.lightTextTheme.displaySmall),
-            value: _selectedItem,
-            // iconSize: 24.0,
-            icon: Image.asset('assets/icons/dropDownBtn.png'),
-            items: _items.map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedItem = newValue;
-              });
-            },
-          ),
-        ),*/
         const SizedBox(width: 2.0),
         GestureDetector(
           onTap: () => AppLandingController.instance.settingsScreenNavigation(),

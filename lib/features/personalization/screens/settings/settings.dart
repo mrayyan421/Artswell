@@ -2,7 +2,7 @@ import 'package:artswellfyp/common/styles/boxShadow.dart';
 import 'package:artswellfyp/common/widgets/commonWidgets/popups/warningPopup.dart';
 import 'package:artswellfyp/features/personalization/controllers/userController.dart';
 import 'package:artswellfyp/features/personalization/screens/aboutUs/aboutUs.dart';
-import 'package:artswellfyp/features/personalization/screens/orderManagement/orderManagement.dart';
+import 'package:artswellfyp/features/personalization/screens/sellerStory/sellerStoryScreen.dart';
 import 'package:artswellfyp/features/shop/controllers/homeController.dart';
 import 'package:artswellfyp/utils/constants/colorConstants.dart';
 import 'package:artswellfyp/utils/constants/size.dart';
@@ -13,6 +13,8 @@ import 'package:get/get.dart';
 import '../../../../common/widgets/listTileWidgetSettingsScreen.dart';
 import '../../../../common/widgets/commonWidgets/shimmers/shimmerEffect.dart';
 import '../../../../data/repositories/authenticationRepository/authenticationRepository.dart';
+import '../../controllers/sellerStoryController.dart';
+import '../orderManagement.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -24,10 +26,16 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _locationServicesEnabled = false;
 
+  /*@override
+  void initState() {
+    // TODO: implement initState
+    Get.put(SellerStoryScreen());
+  }*/
   @override
   Widget build(BuildContext context) {
     final controller=Get.put(UserController());
     final userController=Get.put(UserController());
+    // final sellerStoryController = Get.put(SellerStoryController());
 
     return Scaffold(
       appBar: AppBar(
@@ -98,7 +106,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           // SettingsListTileWidget(precedingIcon: 'assets/icons/store.png', title: 'Store Settings', subtitle: 'Update your store settings',/*onTap: ProductManagement() use getx cntroller*/),
                           // SettingsListTileWidget(precedingIcon: 'assets/icons/analytics.png', title: 'Store Analytics', subtitle: 'Monitor your store statistics',),
                           SettingsListTileWidget(precedingIcon: 'assets/icons/help.png', title: 'Support & Help Center', subtitle: 'Contact 24/7 available support',onTap:()=> Get.to(const AboutUsScreen(),transition: Transition.downToUp,duration: const Duration(milliseconds: 700)),),
-                          // SettingsListTileWidget(precedingIcon: 'assets/icons/performance.png', title: 'Store Performance', subtitle: 'Evaluate your store\'s market worth',),
                           SettingsListTileWidget(precedingIcon: 'assets/icons/location.png', title: 'Location Services', subtitle: 'Enable/Disable Location Services',onTap: HomeController.instance.userAddressNavigation, trailing: Switch(
                               value: _locationServicesEnabled,
                               onChanged: (value) {
@@ -108,6 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               },
                             ),
                           ),
+                          if(UserController.instance.user.value.role=='Seller')SettingsListTileWidget(precedingIcon: 'assets/icons/acct.png', title: 'Seller Story', subtitle: 'Add your experience \& story',onTap: ()=>Get.to(SellerStoryScreen(),transition: Transition.downToUp,duration: const Duration(milliseconds: 700)),),
                         ],
                       ),
                     ),

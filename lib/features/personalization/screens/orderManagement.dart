@@ -12,8 +12,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../common/widgets/cartSkeleton/cartItem.dart';
 import '../../../../common/widgets/loaders/basicLoaders.dart';
-import '../../../shop/controllers/orderController.dart';
-import '../../../shop/models/orderModel.dart';
+import '../../shop/controllers/orderController.dart';
+import '../../shop/models/orderModel.dart';
 
 class OrderManagementScreen extends StatelessWidget {
   final OrderController _orderController = Get.put(OrderController());
@@ -30,12 +30,12 @@ class OrderManagementScreen extends StatelessWidget {
           child: Image.asset('assets/icons/leftArrow.png'),
         ),
         title: Text('Order Management',          style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.grey),
-            ),
+        ),
         centerTitle: true,
         backgroundColor: kColorConstants.klPrimaryColor,
       ),
       body: StreamBuilder<List<OrderModel>>(
-        stream: _orderController.getCartItemsStream(),
+        stream: UserController.instance.user.value.role=='Customer'?_orderController.getCartItemsStream():_orderController.getOrderItemsStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -50,7 +50,7 @@ class OrderManagementScreen extends StatelessWidget {
               (cartItems.length == 1 && cartItems.first.orderId == 'INIT');
 
           if (isEmpty) {
-            return const Center(child: Text('Your cart is empty'));
+            return Center(child: UserController.instance.user.value.role=='Seller'?const Text('No orders yet...'):const Text('Your cart is empty...'));
           }
 
           double subtotal = cartItems.fold(
@@ -65,7 +65,7 @@ class OrderManagementScreen extends StatelessWidget {
           return SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(kSizes.mediumPadding),
-              child: Column(
+              child:  Column(
                 children: [
                   ListView.separated(
                     shrinkWrap: true,
@@ -82,25 +82,30 @@ class OrderManagementScreen extends StatelessWidget {
 
                       return Column(
                         children: [
-                          kCircularContainer(
-                            backgroundColor: kColorConstants.klInactiveTrackColor,
-                            width: null,
-                            showBorder: true,
-                            height: null,
-                            padding: const EdgeInsets.all(kSizes.mediumBorderRadiusPadding),
-                            child: Column(
-                              children: [
-                                kCartItem(
-                                  productName: item.items.first.name,
-                                  productImage: item.productImage,
-                                  price: item.items.first.price,
-                                  quantity: item.items.first.quantity,
-                                  productId: item.items.first.productId, estimatedDelivery: DateFormat('dd/MM/yyyy').format(item.estimatedDelivery),
-                                  // estimatedDelivery: item.estimatedDelivery.toString(),
-                                  paymentConfirmation: hasReceipt,
-                                ),
-                              ],
-                            ),
+                          GestureDetector(
+                            child: kCircularContainer(
+                              backgroundColor: kColorConstants.klInactiveTrackColor,
+                              width: null,
+                              showBorder: true,
+                              height: null,
+                              padding: const EdgeInsets.all(kSizes.mediumBorderRadiusPadding),
+                              child: Column(
+                                children: [
+                                  kCartItem(
+                                    productName: item.items.first.name,
+                                    productImage: item.productImage,
+                                    price: item.items.first.price,
+                                    quantity: item.items.first.quantity,
+                                    productId: item.items.first.productId, estimatedDelivery: DateFormat('dd/MM/yyyy').format(item.estimatedDelivery),
+                                    address: item.address,
+                                    // estimatedDelivery: item.estimatedDelivery.toString(),
+                                    paymentConfirmation: hasReceipt,
+                                    customerName: item.userId,
+                                    status: item.status,
+                                  ),
+                                ],
+                              ),
+                            ),onLongPress: ()=>_orderController.updateCartItem(orderId: item.orderId, updatedItem: item.items.first, productImage: item.productImage, newStatus: 'Payment Confirmed'),
                           ),
                           const SizedBox(height: kSizes.smallestPadding),
                           Row(
@@ -116,7 +121,7 @@ class OrderManagementScreen extends StatelessWidget {
                                   const SizedBox.shrink(),
                                 ],
                               ),
-                              Text(
+                              if (item.status != 'Order Dispatched' && item.status != 'Payment Confirmed')Text(
                                 'PKR ${itemTotal.toStringAsFixed(0)}',
                                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                   fontStyle: FontStyle.italic,
@@ -135,7 +140,7 @@ class OrderManagementScreen extends StatelessWidget {
                     width: null,
                     showBorder: true,
                     height: null,
-                    child: // Replace the current button section with this:
+                    child:
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -214,6 +219,22 @@ class OrderManagementScreen extends StatelessWidget {
           );
         },
       ),
+      floatingActionButton: UserController.instance.user.value.role == 'Seller'
+          ? FloatingActionButton(
+        child: const ImageIcon(AssetImage('assets/icons/check.png')),
+        onPressed: () async {
+          try {
+            final orders = await _orderController.getOrderItemsStream().first;
+            await _orderController.dispatchAllOrders(orders);
+          } catch (e) {
+            kLoaders.errorSnackBar(
+                title: 'Error',
+                message: 'Failed to dispatch orders'
+            );
+          }
+        },
+      )
+          : const SizedBox.shrink(),
     );
   }
 
@@ -365,13 +386,13 @@ class OrderManagementScreen extends StatelessWidget {
         name: item.items.first.name,
         quantity: newQuantity,
         price: item.items.first.price,
-        imageUrl: item.productImage,
+        imageUrl: item.productImage, address: item.address,
       );
 
       await _orderController.updateCartItem(
         orderId: item.orderId,
         updatedItem: updatedItem,
-        productImage: item.productImage,
+        productImage: item.productImage, newStatus: 'Payment Confirmed',
       );
 
       await CachedNetworkImage.evictFromCache(item.productImage);

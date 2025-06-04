@@ -82,22 +82,6 @@ class kRatingAndShare extends StatelessWidget {
               size: 32,
             ),
             SizedBox(width: kSizes.gridViewSpace / 2),
-              // final product = productCtrl.selectedProduct.value;
-              // final rating = product.reviewCount;
-              // final commentCount = product.comments.length;
-
-              /*Text.rich(
-                TextSpan(children: [
-                  TextSpan(
-                    text: displayRating,
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  TextSpan(
-                    text: ' ($commentCount)',
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                ]),
-              )*/
           ],
         ),
         // Share Button

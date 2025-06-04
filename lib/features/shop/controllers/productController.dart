@@ -22,9 +22,8 @@ class ProductController extends GetxController {
   final orderController=Get.put(OrderController());
   final Rx<ProductModel?> selectedProduct = Rx<ProductModel?>(null);
   final RxList<Map<String, dynamic>> productComments = <Map<String, dynamic>>[].obs;
-  final int _pageSize = 10;
-  DocumentSnapshot? _lastDocument;
   final RxList<ProductModel> sellerProducts = <ProductModel>[].obs;
+  final RxList<ProductModel> allProducts=<ProductModel>[].obs;
 
   final RxDouble averageRating=0.0.obs;
   final RxList<Map<String,dynamic>>reviews=<Map<String,dynamic>>[].obs;
@@ -41,7 +40,14 @@ class ProductController extends GetxController {
   final RxList<CartItem> cartItems = <CartItem>[].obs;
 
   //search vars
-  final RxString searchQuery = RxString('');
+  RxList<ProductModel> searchResults = <ProductModel>[].obs;
+  late Worker _searchDebounce;
+
+
+  final RxString searchQuery = ''.obs;
+  final RxBool isSearching = false.obs;
+  // var allProducts = <ProductModel>[].obs;
+  var filteredProducts = <ProductModel>[].obs;
   // final RxString selectedCategory = RxString('');
   final RxString selectedSort = RxString('latest');
   //category sort vars
@@ -52,45 +58,81 @@ class ProductController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadProducts();
-    // loadComments(ProductController().selectedProduct.value!.id);
-    // _loadShopImages();
+
+    _searchDebounce = debounce(
+      searchQuery,
+          (_) {
+        debugPrint("Debounced search: ${searchQuery.value}");
+        loadProducts();
+      },
+      time: const Duration(milliseconds: 500),
+    );
   }
 
+
   Future<void> loadProducts() async {
+    isLoading(true);
+
     try {
-      // Don't reload if data is fresh (e.g., within last 30 seconds)
-      if (_lastFetchTime != null &&
+      if (searchQuery.value.isEmpty &&
+          _lastFetchTime != null &&
           DateTime.now().difference(_lastFetchTime!) < const Duration(seconds: 30) &&
           _cache.containsKey(selectedSort.value)) {
         products.value = _cache[selectedSort.value]!;
         return;
       }
-      isLoading(true);
-      List<ProductModel> loadedProducts;
 
-      if (selectedSort.value.isEmpty || selectedSort.value == 'latest') {
-        loadedProducts = await _repo.getLatestProducts();
-      } else if (selectedSort.value == 'priceLowToHigh') {
-        loadedProducts = await _repo.fetchProductsSortedByPrice(ascending: true);
-      } else if (selectedSort.value == 'priceHighToLow') {
-        loadedProducts = await _repo.fetchProductsSortedByPrice(ascending: false);
+      List<ProductModel> loadedProducts = [];
+
+      if (searchQuery.value.isNotEmpty) {
+isLoading(false);
+        try {
+          loadedProducts = await _repo.searchProducts(
+            query: searchQuery.value,
+            sortOption: selectedSort.value,
+          );
+        } catch (e) {
+          debugPrint('Search failed: $e');
+          loadedProducts = [];
+        }
       } else {
-        loadedProducts = await _repo.fetchAll();
+        // REGULAR LOAD
+        switch (selectedSort.value) {
+          case 'priceLowToHigh':
+            loadedProducts = await _repo.fetchProductsSortedByPrice(ascending: true);
+            break;
+          case 'priceHighToLow':
+            loadedProducts = await _repo.fetchProductsSortedByPrice(ascending: false);
+            break;
+          case 'latest':
+          default:
+            loadedProducts = await _repo.getLatestProducts();
+            break;
+        }
+        // isLoading(false);
+
+        // Cache only for regular (non-search) loads
+        _cache[selectedSort.value] = loadedProducts;
+        _lastFetchTime = DateTime.now();
       }
 
-      // Update cache
-      _cache[selectedSort.value] = loadedProducts;
-      _lastFetchTime = DateTime.now();
       products.value = loadedProducts;
-
-      // isLoading(false);
     } catch (e) {
-      kLoaders.errorSnackBar(title: 'Error', message: 'Failed to load products');
+      debugPrint('Load products error: $e');
+      products.value = [];
+      if (searchQuery.value.isEmpty) {
+        kLoaders.errorSnackBar(title: 'Error', message: 'Failed to load products');
+      }
     } finally {
       isLoading(false);
     }
   }
+
+  void clearSearch() {
+    searchQuery.value = '';
+    searchResults.clear();
+  }
+
   Future<String> getShopName(String sellerId) async {
     if (_shopNames.containsKey(sellerId)) return _shopNames[sellerId]!;
 
@@ -102,6 +144,7 @@ class ProductController extends GetxController {
       return 'ArtsWell';
     }
   }
+
   Future<void> loadSellerProducts(String? sellerId) async {
     try {
       isLoading(true);
@@ -115,15 +158,31 @@ class ProductController extends GetxController {
       kLoaders.errorSnackBar(title: 'Error', message: 'Failed to load products: ${e.toString()}');
     }
   }
+
+  Future<List<ProductModel>> fetchProductsFromService() async {
+    await Future.delayed(Duration(seconds: 1));
+    return filteredProducts;
+  }
+  Future<void> fetchAllProducts() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('products')
+          .get();
+
+      allProducts.assignAll(querySnapshot.docs.map((doc) =>
+          ProductModel.fromSnapshot(doc)));
+    } catch (e) {
+      kLoaders.errorSnackBar(title: 'Error', message: e.toString());
+    }
+  }
   Future<void> loadCategoryProducts(String category) async {
     try {
       isLoading(true);
-      selectedCategory.value = category;
-      final products = await _repo.fetchProductsByCategory(category);
-      categoryProducts.assignAll(products);
+      final productsByCategory = await _repo.fetchProductsByCategory(category);
+      products.assignAll(productsByCategory);
     } catch (e) {
-      categoryProducts.clear();
-      kLoaders.errorSnackBar(title: 'Error', message: e.toString());
+      debugPrint('Category load failed: $e');
+      products.clear();
     } finally {
       isLoading(false);
     }
@@ -134,19 +193,12 @@ class ProductController extends GetxController {
     categoryProducts.clear();
   }
 
-  Future<DocumentSnapshot?> _getLastVisibleDocument() async {
-    if(products.isEmpty) return null;
-    final lastProduct = products.value.last;
-    return await _repo.getDocumentSnapshot(lastProduct.id);
-  }
-
   Future<void> refreshComments(String productId) async {
     try {
       isLoading(true);
       final comments = await _repo.getProductComments(productId);
       productComments.assignAll(comments);
 
-      // Calc average rating
       if (productComments.isNotEmpty) {
         final totalRating = productComments.fold(0.0, (sum, comment) {
           return sum + (comment['rating'] ?? 0.0);
@@ -164,36 +216,12 @@ class ProductController extends GetxController {
       isLoading(false);
     }
   }
-
-  Future<void> updateAverageRating(String productId) async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('products')
-        .doc(productId)
-        .collection('reviews')
-        .get();
-
-    if (snapshot.docs.isEmpty) return;
-
-    final total = snapshot.docs.fold(0.0, (sum, doc) {
-      return sum + (doc.data()['rating'] as num).toDouble();
-    });
-
-    final average = total / snapshot.docs.length;
-    averageRating.value = double.parse(average.toStringAsFixed(1));
-
-    // Update product document with new average
-    await FirebaseFirestore.instance
-        .collection('products')
-        .doc(productId)
-        .update({
-      'averageRating': averageRating.value,
-      'reviewCount': snapshot.docs.length,
-    });
-  }
   @override
   void onClose() {
+    _searchDebounce.dispose();
     super.onClose();
   }
+
   Future<void> addComment(String productId, String comment, double rating) async {
     try {
       final user = UserController.instance.user.value;
@@ -222,87 +250,7 @@ class ProductController extends GetxController {
       rethrow;
     }
   }
-  /*Future<void> addComment(String productId, String commentText, double rating) async {
-    try {
-      final user = UserController.instance.user.value;
 
-      // Add to comments subcollection
-      await _repo.addComment(productId, {
-        'comment': commentText,
-        'userId': user.uid,
-        'userName': user.fullName,
-        'createdAt': FieldValue.serverTimestamp(),
-        'rating': rating,
-      });
-
-      // Refresh comments after adding new one
-      await refreshComments(productId);
-
-      // Also update average rating
-      await updateAverageRating(productId);
-
-      kLoaders.successSnackBar(
-          title: 'Success',
-          message: 'Comment added successfully'
-      );
-    } catch (e) {
-      print('Failed to add comment: $e');
-      kLoaders.errorSnackBar(
-          title: 'Error',
-          message: 'Failed to add comment: ${e.toString()}'
-      );
-    }
-  }*/
-  /* Future<double> calculateAverageRating(String productId) async {
-    try {
-      final comments = await _repo.getProductComments(productId);
-      if (comments.isEmpty) return 0.0;
-
-      final totalRating = comments.fold(0.0, (sum, comment) {
-        return sum + (comment['rating'] ?? 0.0);
-      });
-
-      return totalRating / comments.length;
-    } catch (e) {
-      return 0.0;
-    }
-  }*/
-  ///Trigger func for uploading imgs
-  /*Future<void> pickAndUploadImage(String productId) async {
-    try {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxHeight: 800,
-        maxWidth: 800,
-        imageQuality: 75,
-      );
-
-      if (pickedFile != null) {
-        final file = File(pickedFile.path);
-
-        // Upload the image using ProductRepository
-        await _repo.addImages(
-          productId: productId,
-          files: [file],
-        );
-
-        // Refresh the product data
-        final updatedProduct = await _repo.getProductById(productId);
-        selectedProduct.value = updatedProduct;
-
-        kLoaders.successSnackBar(
-            title: 'Success!',
-            message: 'Image uploaded successfully'
-        );
-      }
-    } catch (e) {
-      kLoaders.errorSnackBar(
-          title: 'Error',
-          message: 'Failed to upload image: ${e.toString()}'
-      );
-    }
-  }*/
   Future<void> pickAndUploadImage(String productId) async {
     try {
       Get.dialog(
@@ -383,137 +331,8 @@ class ProductController extends GetxController {
       );
     }
   }
-  //----------------------working func
-  //----------------------------------
-  /*Future<void> pickAndUploadImage(String productId) async {
-    try {
-      Get.dialog(
-        const Center(child: CircularProgressIndicator()),
-        barrierDismissible: false,
-      );
 
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxHeight: 800,
-        maxWidth: 800,
-        imageQuality: 75,
-      );
-
-      if (pickedFile != null) {
-        final file = File(pickedFile.path);
-        final uid = FirebaseAuth.instance.currentUser?.uid ?? 'unknown_user';
-
-        // Upload image
-        final String imgUrl = await UserRepository.instance.uploadImage(
-            'product_images/$uid',
-            file
-        );
-
-        // Update product with new image
-        final currentProduct = selectedProduct.value;
-        if (currentProduct != null) {
-          final updatedImages = [
-            imgUrl,
-            ...(currentProduct.productImages?.skip(1) ?? <String>[])
-          ];
-
-          await _repo.updateProduct(
-            id: productId,
-            newImageUrls: updatedImages,
-            primaryImageIndex: 0,
-          );
-
-          // Update local state
-          selectedProduct.value = ProductModel(
-            id: productId,  // This is passed to the function; Firestore auto-generates it when using .add()
-            productName: selectedProduct.value?.productName??'Product1',
-            productImages: [imgUrl],
-            primaryImageIndex: 0,  //first image is primary so 0
-            inStock: selectedProduct.value?.inStock??true,//if new product is in stock
-            isBiddable: selectedProduct.value?.isBiddable??false,
-            isFavorite: selectedProduct.value?.isFavorite??false,
-            productDescription: selectedProduct.value?.productDescription??'Product description comes here',
-            productPrice: selectedProduct.value?.productPrice??0,
-            sellerId: UserController.instance.user.value.uid,
-            comment: selectedProduct.value?.comment??'',
-            category: selectedProduct.value?.category??'Calligraphy',
-            feedback: selectedProduct.value?.feedback??[],
-            reviewCount: selectedProduct.value?.reviewCount??0,
-            comments: selectedProduct.value?.comments??[],
-            createdAt: selectedProduct.value?.createdAt??Timestamp.now(),
-            averageRating: selectedProduct.value?.averageRating??0.0
-          );
-        }
-
-        Get.back();
-        kLoaders.successSnackBar(
-            title: 'Success!',
-            message: 'Image uploaded successfully'
-        );
-      } else {
-        Get.back();
-      }
-    } catch (e) {
-      Get.back();
-      debugPrint('Image upload error: $e');
-      kLoaders.errorSnackBar(
-          title: 'Upload Failed',
-          message: 'Failed to upload image: ${e.toString()}'
-      );
-      rethrow;
-    }
-  }*/
-  /*Future<void> pickAndUploadImage(String productId) async {
-    try{
-      print('pickAndUploadImage called with productId: $productId');
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxHeight: 800,
-      maxWidth: 800,
-      imageQuality: 75,
-    );
-
-    if (pickedFile != null) {
-      final uid = FirebaseAuth.instance.currentUser!.uid;
-      final imgUrl = await UserRepository.instance.uploadImage('product_images/$uid', pickedFile);
-
-
-      Map<String, dynamic> json = {'productImages': [imgUrl]};//ask gpt how to store the image in first index
-      await UserRepository.instance.updateSingleField(json);//add this method inside user repository and ask gpt how to update method for Seller
-
-      final currentUser = UserController.instance.user.value;
-
-      selectedProduct.value = ProductModel(
-        id: productId,  // This is passed to the function; Firestore auto-generates it when using .add()
-        productName: selectedProduct.value?.productName??'Product1',
-        productImages: [imgUrl],
-        primaryImageIndex: 0,  //first image is primary so 0
-        inStock: selectedProduct.value?.inStock??true,//if new product is in stock
-        isBiddable: selectedProduct.value?.isBiddable??false,
-        isFavorite: selectedProduct.value?.isFavorite??false,
-        productDescription: selectedProduct.value?.productDescription??'Product description comes here',
-        productPrice: selectedProduct.value?.productPrice??0,
-        sellerId: currentUser.uid,
-        comment: selectedProduct.value?.comment??'',
-        category: selectedProduct.value?.category??'Calligraphy',
-        feedback: selectedProduct.value?.feedback??[],
-        reviewCount: selectedProduct.value?.reviewCount??0,
-          comments: selectedProduct.value?.comments??[],
-        createdAt: selectedProduct.value?.createdAt??Timestamp.now(),
-        averageRating: selectedProduct.value?.averageRating??0.0
-      );
-      await updateProduct(id: productId, newImages: [File(imgUrl)]);
-      kLoaders.successSnackBar(title: 'Success!',message: 'Image uploaded successfully');
-    }}catch(e){
-      print(e);
-      kLoaders.errorSnackBar(title: 'Hmmm...',message: e.toString());
-    }
-  }*/
-
-
-  ///adding images
+  ///adding imgs
   Future<String> add({
     required String name,
     required String description,
@@ -555,7 +374,7 @@ class ProductController extends GetxController {
     required String id,
     String? name,
     String? description,
-    List<XFile>? newImages,  // Changed from List<File> to List<XFile>
+    List<XFile>? newImages,
     int? price,
     bool? inStock,
     int? primaryImageIndex,
@@ -598,7 +417,7 @@ class ProductController extends GetxController {
       await loadProducts();
     } catch (e) {
       errorMessage(e.toString());
-      rethrow;  // Re-throw to allow error handling upstream
+      rethrow;
     } finally {
       isLoading(false);
     }
@@ -626,30 +445,6 @@ class ProductController extends GetxController {
     }
   }
 
-  // In your ProductController
-  /*Future<void> setPrimaryImage(String productId, int index) async {
-    try {
-      // Validate the index
-      if (selectedProduct.value == null ||
-          selectedProduct.value!.productImages == null ||
-          index < 0 ||
-          index >= selectedProduct.value!.productImages!.length) {
-        throw 'Invalid image index';
-      }
-
-      // Update in Firestore
-      await _repo.setPrimaryImage(
-        productId: productId,
-        newPrimaryIndex: index,
-      );
-
-      // No need to update local state here - already done in widget
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to update image: ${e.toString()}');
-      // Revert the UI change
-      selectedProduct.refresh();
-    }
-  }*/
   void updatePrimaryImageLocally(int index) {
     if (selectedProduct.value != null) {
       selectedProduct.value!.primaryImageIndex = index;
@@ -679,61 +474,7 @@ class ProductController extends GetxController {
       selectedProduct.refresh();
     }
   }
-  ///To set bg img
-  ///real one----------------------------
-  /*Future<void> setPrimaryImage(String productId, int newIndex) async {
-    try {
-      // Get current product values
-      final current = selectedProduct.value;
-      if (current == null || current.id != productId) return;
 
-      // Create new ProductModel with updated index
-      selectedProduct.value = ProductModel(
-        id: current.id,
-        productName: current.productName,
-        productImages: current.productImages,
-        primaryImageIndex: newIndex, // This is the only changed field
-        inStock: current.inStock,
-        isBiddable: current.isBiddable,
-        isFavorite: current.isFavorite,
-        productDescription: current.productDescription,
-        productPrice: current.productPrice,
-        sellerId: current.sellerId,
-        comment: current.comment,
-        category: current.category,
-        feedback: current.feedback,
-        reviewCount: current.reviewCount,
-        comments: current.comments,
-        createdAt: current.createdAt,
-        averageRating: current.averageRating,
-      );
-
-      // Update in Firestore
-      await _repo.setPrimaryImage(
-        productId: productId,
-        newPrimaryIndex: newIndex,
-      );
-
-    } catch (e) {
-      errorMessage(e.toString());
-      // Optionally revert visual change here if needed
-    }
-  }*/
-  /*Future<void> setPrimaryImage(String productId, int index) async {
-    try {
-      isLoading(true);
-      await _repo.setPrimaryImage(productId: productId, newPrimaryIndex: index);
-      await loadProducts();
-
-      final updated = products.firstWhereOrNull((p) => p.id == productId);
-      if (updated != null) selectedProduct.value = updated;
-
-    } catch (e) {
-      errorMessage(e.toString());
-    } finally {
-      isLoading(false);
-    }
-  }*/
   Future<void> setSecondaryImages(String productId) async {
     try {
       Get.dialog(
@@ -751,16 +492,15 @@ class ProductController extends GetxController {
       final uid = FirebaseAuth.instance.currentUser?.uid ?? 'unknown_user';
 
       // Upload new images directly using XFiles
-      final newUrls = await _uploadImages(picked, 'product_images/$uid'); // Changed to use XFiles directly
+      final newUrls = await _uploadImages(picked, 'product_images/$uid');
 
       // Get current product data
       final currentProduct = selectedProduct.value;
       if (currentProduct == null) throw 'Product not loaded';
 
-      // Combine with existing images (keeping the first image as thumbnail)
       final updatedImages = [
-        currentProduct.productImages.first ?? '', // Keep existing thumbnail
-        ...(currentProduct.productImages.skip(1) ?? <String>[]), // Existing secondary images
+        currentProduct.productImages.first ?? '',
+        ...(currentProduct.productImages.skip(1) ?? <String>[]),
         ...newUrls // New images
       ];
 
@@ -819,17 +559,6 @@ class ProductController extends GetxController {
   }
 
 
-  Future<void> deleteImage(String productId, int index) async {
-    try {
-      isLoading(true);
-      await _repo.deleteImage(productId: productId, index: index);
-      await loadProducts();
-    } catch (e) {
-      errorMessage(e.toString());
-    } finally {
-      isLoading(false);
-    }
-  }
   // Delete product
   Future<void> deleteProduct(String productId) async {
     try {
@@ -843,7 +572,6 @@ class ProductController extends GetxController {
       isLoading.value = false;
     }
   }
-
 }
 
 

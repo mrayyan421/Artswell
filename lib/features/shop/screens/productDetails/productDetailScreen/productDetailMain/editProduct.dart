@@ -30,9 +30,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final List<String> _categories = [
     'calligraphy',
     'clothes',
-    'stone Art',
-    'truck Art',
-    'wood'
+    'stone art',
+    'truck art',
+    'wood art'
   ];
 
   @override
@@ -167,43 +167,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
             },
             child: const Text("Pick Thumbnail Image"),
           ),
-            /*ElevatedButton(
-              onPressed: () async {
-                try {
-                  // Use the passed productId directly
-                  if (widget.productId.isEmpty) {
-                    kLoaders.errorSnackBar(
-                      title: 'Error',
-                      message: 'Invalid product ID',
-                    );
-                    return;
-                  }
-
-                  await _repo.updateProduct(
-                    id: widget.productId,  // Use the passed productId
-                    name: _nameCtrl.text.trim(),
-                    description: _descCtrl.text.trim(),
-                    price: int.tryParse(_priceCtrl.text.trim()) ?? 0,
-                    inStock: _inStock.value,
-                    isBiddable: _isBiddable.value,
-                    category: _selectedCategory.value,
-                  );
-
-                  kLoaders.successSnackBar(
-                    title: 'Success',
-                    message: 'Product updated successfully',
-                  );
-
-                  Get.back();
-                } catch (e) {
-                  kLoaders.errorSnackBar(
-                    title: 'Error',
-                    message: 'Failed to update product: ${e.toString()}',
-                  );
-                }
-              },
-              child:const Text("Pick Thumbnail image"),
-            ),*/
             const SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: () {

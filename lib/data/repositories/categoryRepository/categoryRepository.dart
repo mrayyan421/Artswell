@@ -47,36 +47,4 @@ class CategoryRepository extends GetxController{
     // commit all updates in one go
     await batch.commit();
   }
-
-
-/*Future<void> uploadDummyData(List<CategoryModel> categories) async {
-    try {
-      // Upload all the Categories along with their Images
-      final storage = Get.put(KFirebaseStorageService());
-
-      // Loop through each category
-      for (var category in categories) {
-        // Get image data link from the local assets
-        final file = await storage.getImageFromAssets(category.image);
-
-        // Upload Image and Get its URL
-        final url = await storage.uploadImageData('Categories', file, category.name);
-
-        // Assign URL to Category.image attribute
-        category.image = url;
-
-        // Store Category in Firestore
-        await _db.collection('Categories').doc(category.id).set(category.toJson());
-      }
-    } on FirebaseException catch (e) {
-      throw FirebaseException(message:e.message,plugin: '');
-    } on PlatformException catch (e) {
-      throw PlatformException(code: e.code);
-    } catch (e) {
-      throw 'Something went wrong. Please try again';
-    }
-  }*/
-
-  //Get subCategories
-  //upload categories to firestore
 }

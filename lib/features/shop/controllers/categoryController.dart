@@ -50,10 +50,4 @@ class CategoryController extends GetxController{
     }
   }
 
-
-  
-  ///load selected category data
-
-  ///Get ctaegory/subcategory products
-
 }

@@ -11,7 +11,7 @@ class PersonalizationController extends GetxController{
   final addController =PageController();
   var currentIndex=0.obs;
 
-  void updatePageIndicator(int index) {//function to update index
+  void updatePageIndicator(int index) {//func to update index
     currentIndex.value = index;
   }
   void userAddAddressNavigation(){
@@ -20,9 +20,6 @@ class PersonalizationController extends GetxController{
   void returnPage(){//previous page navigation
     Get.back();
   }
-  /*void deleteDialogueBox(){
-
-  }*/
   void productDetailPageNavigation(BuildContext context,ProductModel product){
     Get.to(ProductDetail(product: product,),binding:BindingsBuilder(()=>Get.put(ProductController())),transition: Transition.downToUp,duration: const Duration(seconds: 1 ),);
   }

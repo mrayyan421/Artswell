@@ -39,56 +39,6 @@ class UserController extends GetxController {
     }
   }
   /// Save user Record from any Registration provider
- /* Future<void> saveUserRecord(UserModel user) async {
-    try {
-      final userRef = _db.collection("Users").doc(user.uid);
-
-      // user doc creation
-      await userRef.set(user.toJson());
-
-      // create cart subcollection with initial doc
-      await userRef.collection("cart").doc("initial").set({
-        'initialized': true,
-        'createdAt': FieldValue.serverTimestamp(),
-        'userId': user.uid,
-      });
-
-      // create addresses subcollection with initial doc
-      final addressDoc = userRef.collection("addresses").doc("initial");
-      if (!(await addressDoc.get()).exists) {
-        await addressDoc.set(AddressModel(
-          id: 'initial_${user.uid}',
-          userId: user.uid,
-          name: user.fullName.isNotEmpty ? user.fullName : 'User',
-          phoneNumber: user.phoneNumber ?? '',
-          address: '',
-          postalCode: '',
-          state: '',
-          city: '',
-          country: '',
-          isDefault: true,
-          createdAt: Timestamp.now(),
-        ).toJson());
-      }
-
-      // create orders subcollection with initial doc
-      await userRef.collection("orders").doc("initial").set({
-        'initialized': true,
-        'createdAt': FieldValue.serverTimestamp(),
-        'userId': user.uid,
-      });
-
-      print('Successfully created user and all subcollections (cart, addresses, orders)');
-    } catch (e) {
-      print('Error creating user record:');
-      print(e.runtimeType);
-      if (e is FirebaseException) {
-        print('Firestore error: ${e.code} - ${e.message}');
-        print('Stack trace: ${e.stackTrace}');
-      }
-      rethrow;
-    }
-  }*/
   Future<void> saveUserRecord(UserCredential? userCredentials) async {
     try {
       await fetchUserRecord(); // func called to update recent data

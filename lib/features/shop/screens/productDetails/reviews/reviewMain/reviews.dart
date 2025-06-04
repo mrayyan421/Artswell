@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../../utils/constants/size.dart';
 import '../reviewProgressIndicator.dart';
 
+//TODO: use when analytics api is set
 class kReviewSection extends StatelessWidget {
   const kReviewSection({
     super.key,

@@ -1,5 +1,4 @@
 import 'package:artswellfyp/features/shop/models/productModel.dart';
-import 'package:artswellfyp/features/shop/screens/productDetails/productDetailScreen/productMetaData.dart' as _commentController;
 import 'package:artswellfyp/features/shop/screens/productDetails/productDetailScreen/productNameText.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +22,7 @@ class kProductMetaData extends StatefulWidget {
 }
 @override
 void dispose() {
-  _commentController.dispose();
+  // _commentController.dispose();
   // _userRating.close();
   // _isLoading.close();
   // super.dispose();
@@ -146,8 +145,6 @@ class _kProductMetaDataState extends State<kProductMetaData> {
                 ),
 
 
-            // Comments Section with proper Obx implementation
-// Replace your current Obx comments section with:
             StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('products')
@@ -188,10 +185,7 @@ class _kProductMetaDataState extends State<kProductMetaData> {
                   children: [
                     Text(
                       "Comments:",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: kSizes.smallPadding),
                     ...comments.map((comment) => _buildCommentCard(context, comment)),
@@ -233,9 +227,7 @@ class _kProductMetaDataState extends State<kProductMetaData> {
                   radius: 16,
                   backgroundColor: kColorConstants.klSecondaryColor.withOpacity(0.2),
                   child: Text(
-                    comment['userName']?.toString().isNotEmpty == true
-                        ? comment['userName'][0].toUpperCase()
-                        : '?',
+                    comment['userName']?.toString().isNotEmpty == true ? comment['userName'][0].toUpperCase() : '?',
                     style: const TextStyle(
                       color: kColorConstants.klSecondaryColor,
                       fontWeight: FontWeight.bold,
@@ -388,7 +380,7 @@ class _kProductMetaDataState extends State<kProductMetaData> {
                     ? null
                     : () {
                   Navigator.pop(context);
-                  commentController.dispose();
+                  // commentController.dispose();
                 },
                 child: const Text('Cancel'),
               ),
@@ -417,17 +409,13 @@ class _kProductMetaDataState extends State<kProductMetaData> {
 
                   isLoading.value = true;
                   try {
-                    await productCtrl.addComment(
-                      widget.product.id, // Using the widget's product directly
-                      comment,
-                      userRating,
-                    );
+                    await productCtrl.addComment(widget.product.id, comment, userRating,);
                     kLoaders.successSnackBar(
                       title: 'Thank You!',
                       message: 'Your review has been submitted',
                     );
                     Navigator.pop(context);
-                    commentController.dispose();
+                    // commentController.dispose();
                   } catch (e) {
                     kLoaders.errorSnackBar(
                       title: 'Submission Failed',
@@ -438,13 +426,8 @@ class _kProductMetaDataState extends State<kProductMetaData> {
                   }
                 },
                 child: isLoading.value
-                    ? const CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                )
-                    : const Text(
-                  'Submit Review',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                    ? const CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white),)
+                    : const Text('Submit Review', style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -452,7 +435,6 @@ class _kProductMetaDataState extends State<kProductMetaData> {
         });
       },
     );
-
   }
 }
 

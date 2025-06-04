@@ -1,6 +1,7 @@
 import 'package:artswellfyp/common/widgets/commonWidgets/divider.dart';
 import 'package:artswellfyp/common/widgets/customizedShapes/searchBarContainer.dart';
 import 'package:artswellfyp/common/widgets/successScreen.dart';
+import 'package:artswellfyp/features/personalization/controllers/userController.dart';
 import 'package:artswellfyp/features/shop/controllers/orderController.dart';
 import 'package:artswellfyp/features/shop/screens/checkOut/billingAddress.dart';
 import 'package:artswellfyp/features/shop/screens/checkOut/billingAmounts.dart';
@@ -132,6 +133,9 @@ class CheckoutScreen extends StatelessWidget {
                           quantity: item.items.first.quantity,
                           productId: item.items.first.productId,
                           estimatedDelivery: item.estimatedDelivery.toString(),
+                          address: item.address,
+                          customerName: UserController.instance.user.value.fullName,
+                          status: item.status,
                           // estimatedDelivery: item.estimatedDelivery.toString(),
                         ),
                       );

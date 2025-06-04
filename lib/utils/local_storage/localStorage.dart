@@ -1,7 +1,7 @@
 import 'package:get_storage/get_storage.dart';
 
-//Singleton class for handling local storage
-//Design pattern used==Factory method
+//TODO:Singleton class to handling local storage
+
 class kLocalStorage{
   kLocalStorage._internal();
   final _getXStorage=GetStorage();

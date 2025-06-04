@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:artswellfyp/data/repositories/authenticationRepository/authenticationRepository.dart';
 import 'package:artswellfyp/data/repositories/productRepository/productRepository.dart';
+import 'package:artswellfyp/features/personalization/controllers/userController.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -26,13 +27,7 @@ class UserRepository extends GetxController {
 
   Future<List<OrderModel>> getUserCartItems(String userId) async {
     try {
-      final snapshot = await _db
-          .collection("Users")
-          .doc(userId)
-          .collection("cart")
-          .where("status", isEqualTo: "Pending")
-          .orderBy("orderDate", descending: true)
-          .get();
+      final snapshot = await _db.collection("Users").doc(userId).collection("cart").where("status", isEqualTo: "Pending").orderBy("orderDate", descending: true).get();
 
       return snapshot.docs.map((doc) => OrderModel.fromSnapshot(doc)).toList();
     } catch (e) {
@@ -42,12 +37,7 @@ class UserRepository extends GetxController {
   }
   Future<List<AddressModel>> getUserAddresses(String userId) async {
     try {
-      final snapshot = await _db
-          .collection("Users")
-          .doc(userId)
-          .collection("addresses")
-          .orderBy("createdAt", descending: true)
-          .get();
+      final snapshot = await _db.collection("Users").doc(userId).collection("addresses").orderBy("createdAt", descending: true).get();
 
       return snapshot.docs.map((doc) => AddressModel.fromFirestore(doc)).toList();
     } catch (e) {
@@ -71,10 +61,10 @@ class UserRepository extends GetxController {
     try {
       final userRef = _db.collection("Users").doc(user.uid);
 
-      // 1. Create main user document (existing code)
+      // 1. Create main user document
       await userRef.set(user.toJson());
 
-      // 2. Create all subcollections (existing cart and addresses)
+      // 2. Create all subcollections
       await userRef.collection("cart").doc("initial").set({
         'initialized': true,
         'createdAt': FieldValue.serverTimestamp(),
@@ -98,68 +88,35 @@ class UserRepository extends GetxController {
         ).toJson());
       }
 
-      // 3. NEW: Add orders subcollection with initial document
+      // 3. Create orders subcollection
       await userRef.collection("orders").doc("initial").set({
         'initialized': true,
         'createdAt': FieldValue.serverTimestamp(),
         'userId': user.uid,
-        'status': 'ready', // Customize as needed
+        'status': 'ready',
         'orderCount': 0,
       });
 
-      print('User document with cart, addresses, and orders subcollections created');
+      // 4. NEW: Create seller_stories subcollection for sellers
+      if (user.role == 'Seller') {
+        await userRef.collection("seller_stories").doc(user.uid).set({
+          'userId': user.uid,
+          'shopName': user.shopName ?? 'ArtsWell',
+          'successStory': '',
+          'remarks': '',
+          'shopDetails': '',
+          'profileImageUrl': '',
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      print('User document with all subcollections created successfully');
     } catch (e) {
       print('Error creating user record: $e');
       rethrow;
     }
   }
-  /*Future<void> saveUserRecord(UserModel user) async{
-    try {
-      final userRef = _db.collection("Users").doc(user.uid);
-
-      // user doc creation
-      await userRef.set(user.toJson());
-
-      // create subcollection
-      await userRef.collection("cart").doc("initial").set({
-        'initialized': true,
-        'createdAt': FieldValue.serverTimestamp(),
-        'userId': user.uid,
-      });
-
-      final addressDoc = userRef.collection("addresses").doc("initial");
-      if (!(await addressDoc.get()).exists) {
-        await addressDoc.set(AddressModel(
-          id: 'initial_${user.uid}',
-          userId: user.uid,
-          name: user.fullName.isNotEmpty ? user.fullName : 'User',
-          phoneNumber: user.phoneNumber ?? '',
-          address: '',
-          postalCode: '',
-          state: '',
-          city: '',
-          country: '',
-          isDefault: true,
-          createdAt: Timestamp.now(),
-        ).toJson());
-      }
-      // await userRef.collection("orders").doc("initial").set({
-      //   'initialized': true,
-      //   'createdAt': FieldValue.serverTimestamp(),
-      //   'userId': user.uid,
-      // });
-
-      print('Successfully created user and cart subcollection');
-    } catch (e) {
-      print('Error:');
-      print(e.runtimeType);
-      if (e is FirebaseException) {
-        print('Firestore error: ${e.code} - ${e.message}');
-        print('Stack trace: ${e.stackTrace}');
-      }
-      rethrow;
-    }
-  }*/
   //get user details
   Future<UserModel> fetchUserDetails() async {
     try {
@@ -246,23 +203,6 @@ class UserRepository extends GetxController {
     return doc['shopName'] ?? 'ArtsWell'; // Default fallback
   }
   ///func to upload img to fb
-  /*Future<String> uploadImage(String path, XFile image) async {
-    try {
-      final ref = FirebaseStorage.instance.ref().child(path).child(image.name);
-
-      final file = File(image.path);
-      await ref.putFile(file);
-
-      // Get the download URL
-      final downloadUrl = await ref.getDownloadURL();
-
-      return downloadUrl;
-    } on FirebaseException catch (e) {
-      throw FirebaseException(plugin: 'Firebase Storage', message: e.message);
-    } catch (e) {
-      throw Exception('An error occurred while uploading the image: $e');
-    }
-  }*/
   Future<void> updateProduct({
     required String id,
     String? name,
@@ -307,19 +247,7 @@ class UserRepository extends GetxController {
       rethrow;
     }
   }
-//recent
-  /*Future<String> uploadImage(String path, File image) async {
-    try {
-      final ref = _storage.ref()
-          .child(path)
-          .child(DateTime.now().millisecondsSinceEpoch.toString());
-      final uploadTask = ref.putFile(image);
-      final snapshot = await uploadTask;
-      return await snapshot.ref.getDownloadURL();
-    } catch (e) {
-      throw 'Failed to upload image: $e';
-    }
-  }*/
+
   ///for ordersPlaced array
   Future<void> addSaleToSeller(String sellerId, String amountString) async {
     try {
@@ -374,41 +302,4 @@ class UserRepository extends GetxController {
       throw 'Something went wrong. Please try again';
     }
   }
-//PREV
-  /*Future<String> uploadImage(String path, File image) async {
-    try {
-      // Generate unique filename
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final ext = image.path.split('.').last;
-      final fileName = '$timestamp.$ext';
-
-      // Create reference with full path
-      final ref = FirebaseStorage.instance.ref('$path/$fileName');
-
-      // Upload the file with metadata
-      final metadata = SettableMetadata(
-          contentType: 'image/${ext == 'jpg' ? 'jpeg' : ext}',
-          customMetadata: {'uploadedBy': FirebaseAuth.instance.currentUser?.uid ?? 'unknown'}
-      );
-
-      // Show upload progress
-      final uploadTask = ref.putFile(image, metadata);
-      uploadTask.snapshotEvents.listen((taskSnapshot) {
-        debugPrint('Upload progress: ${(taskSnapshot.bytesTransferred/taskSnapshot.totalBytes)*100}%');
-      });
-
-      // Wait for upload to complete
-      final snapshot = await uploadTask;
-
-      // Get download URL
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
-    } on FirebaseException catch (e) {
-      debugPrint('Firebase Storage Error: ${e.code} - ${e.message}');
-      throw 'Failed to upload image: ${e.message}';
-    } catch (e) {
-      debugPrint('Upload Error: $e');
-      throw 'Failed to upload image: $e';
-    }
-  }*/
 }

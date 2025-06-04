@@ -1,31 +1,3 @@
-
-/*class kCredentialValidators{//email validation functions
-  final _emailRegularExpression=RegExp(r'^[a-zA-Z0-9._%+#$-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$'); //fyp219@gmail.com
-  final _passwordRegularExpression=RegExp(r'^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,}$'); //Password123!
-  static String? validateEmail(String? email){
-    final regExEmail= kCredentialValidators()._emailRegularExpression;
-    if(email==null || email.isEmpty){
-      return 'Email required';
-    }else if(!regExEmail.hasMatch(email)){
-      return 'Invalid email address';
-    }final String domain=email.split('@').last;
-    if(!kConstantVariables().validDomains.contains(domain)){
-      return 'Invalid domain';
-    }else{
-      return null;
-    }
-  }
-  static String? validatePassword(String? password) {
-    final regExPassword = kCredentialValidators()._passwordRegularExpression;
-    if(password==null || password.isEmpty){
-      return 'Enter Password';
-    }else if(!regExPassword.hasMatch(password)){
-      return 'Invalid password';
-    }else{
-      return null;
-    }
-  }
-}*/
 //TODO: class for defining multiple RegEx(s) for validation purposes
 
 class kValidator {

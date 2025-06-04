@@ -13,8 +13,6 @@ import 'utils/theme/theme.dart';
 import 'package:get/get.dart';
 
 void main() async{
-  // Get.lazyPut(() => BottomNavController());
-  final WidgetsBinding widgetsBinding= WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -22,7 +20,6 @@ void main() async{
   Get.put(AppLandingController());
   final categoryRepo=Get.put(CategoryRepository());
   final userCtrl=Get.put(UserController());
-  // Get.put(ProductController());
   runApp(const EComApp());
   WidgetsBinding.instance.addPostFrameCallback((_){
     categoryRepo.convertAssetImagesToStorageUrls();

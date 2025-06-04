@@ -18,7 +18,7 @@ class SuccessScreen extends StatelessWidget {
           children: [Image.asset('assets/images/success.gif',width: 350,height: 350),
           Text(subTitle,textAlign: TextAlign.center,),
           const SizedBox(height: kSizes.mediumPadding,),
-          SizedBox(width: double.infinity,child: ElevatedButton(onPressed: ()=>AuthenticationRepository.instance.screenRedirect(), child: Text(btnText,style: kAppTheme.lightTheme.textTheme.labelMedium,)),)],),),
+          SizedBox(width: double.infinity,child: ElevatedButton(onPressed: ()=>AuthenticationRepository.instance.screenRedirect(), child: Text(btnText,textAlign:TextAlign.center,style: kAppTheme.lightTheme.textTheme.labelMedium,)),)],),),
     );
   }
 }

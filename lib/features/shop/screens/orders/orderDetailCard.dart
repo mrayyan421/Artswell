@@ -1,3 +1,4 @@
+//TODO: class for static products(for testing)
 import 'package:artswellfyp/common/widgets/circularContainer.dart';
 import 'package:artswellfyp/common/widgets/commonWidgets/roundedImagePromotion.dart';
 import 'package:artswellfyp/utils/constants/size.dart';

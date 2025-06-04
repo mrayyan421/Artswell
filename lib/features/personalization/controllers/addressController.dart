@@ -18,7 +18,7 @@ class AddressController extends GetxController {
     super.onInit();
   }
 
-  // Fetch all addresses for current user
+  /// Fetch all addresses for current user
   Future<void> fetchAddresses() async {
     try {
       isLoading(true);
@@ -38,22 +38,39 @@ class AddressController extends GetxController {
     }
   }
 
-  // Add new address
+  /// Add new address
   Future<void> addNewAddress(AddressModel newAddress) async {
     try {
+      isLoading(true); // Show loading state
       final userId = AuthenticationRepository.instance.authUser?.uid;
       if (userId == null) throw 'User not authenticated';
 
+      // Add the address
       await _addressRepository.addAddress(newAddress);
+
+      // Refresh the addresses list
       await fetchAddresses();
-      kLoaders.successSnackBar(title: 'Success', message: 'Address added');
+
+      // Show success message
+      Get.closeCurrentSnackbar(); // Close any existing snackbars
+      kLoaders.successSnackBar(
+        title: 'Success',
+        message: 'Address added successfully',
+      );
+      Get.back();
     } catch (e) {
-      kLoaders.errorSnackBar(title: 'Error', message: e.toString());
+      Get.closeCurrentSnackbar(); // Close any existing snackbars
+      kLoaders.errorSnackBar(
+        title: 'Error',
+        message: 'Failed to add address: ${e.toString()}',
+      );
       rethrow;
+    } finally {
+      isLoading(false);
     }
   }
 
-  // Set default address
+  /// Set default address
   Future<void> setDefaultAddress(String addressId) async {
     try {
       // Update local state first
@@ -80,7 +97,7 @@ class AddressController extends GetxController {
     }
   }
 
-  // Delete address - Fixed version
+  /// Delete address - Fixed version
   Future<void> deleteAddress(String addressId) async {
     try {
       await _addressRepository.deleteAddress(addressId);
