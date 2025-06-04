@@ -64,6 +64,8 @@ Startups building niche marketplaces
 
 Let’s empower artisans with technology! 🚀
 
+Want to sell your products? Simply login using Google. Want to buy the exceptional handicrafts? Go through manual registration and enjoy a really simple shopping/selling ecommerce experience.
+
 🔗 [(https://github.com/mrayyan421)] | 📧 Contact for Collaborations: 21-SE-7@students.uettaxila.edu.pk | 21-SE-79@students.uettaxila.edu.pk | 
 21-SE-85@students.uettaxila.edu.pk
 
