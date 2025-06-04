@@ -19,7 +19,10 @@ This Flutter-based ECommerce platform is designed specifically for artisans and 
 💬 **Ratings & Reviews** – Share feedback on purchased items.
 📖 **Seller Story Review**- View seller's story in seller's shop.
 
-🔧 **Technical Stack**
+🔧 **Technical Stack**![loginPage](https://github.com/user-attachments/assets/d20a759a-45de-429b-946e-66581bc273d7)
+![shopScreen](https://github.com/user-attachments/assets/28e68e6e-8e82-46b8-8eb8-845d08b76c8d)
+![orderManagement](https://github.com/user-attachments/assets/19bb54a5-13ef-44d2-a376-81502d3283b9)
+
 **Frontend:** _Flutter (iOS & Android)_
 
 **Backend**: _Firebase (Firestore, Authentication, Storage, App distribution)_
@@ -36,7 +39,8 @@ This Flutter-based ECommerce platform is designed specifically for artisans and 
 This platform bridges the gap between artisans and buyers, providing a dedicated marketplace for handmade and unique products. Whether you're a craftsman, painter, or small business owner, this app helps you grow your customer base while offering buyers a trusted shopping experience.
 
 📥 **Get Started**
-Clone the repo
+Clone the repo![loginPage](https://github.com/user-attachments/assets/26a5b8a1-3009-4f9b-b981-a0b3e47eb857)
+
 
 Set up Firebase
 
